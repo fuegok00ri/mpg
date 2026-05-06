@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Phrase Generator</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f9f8f6;--surface:#fff;--surface2:#f3f2ef;
+  --border:rgba(0,0,0,0.11);--border2:rgba(0,0,0,0.20);
+  --text:#1a1a1a;--text2:#555;--text3:#999;
+  --accent:#4f46e5;--accent-bg:#eef2ff;--accent-text:#3730a3;
+  --green-bg:#f0fdf4;--green:#15803d;
+  --r-md:8px;--r-lg:14px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#111110;--surface:#1c1c1b;--surface2:#242422;
+  --border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.18);
+  --text:#f0ede8;--text2:#aaa;--text3:#666;
+  --accent:#818cf8;--accent-bg:#1e1b4b;--accent-text:#a5b4fc;
+  --green-bg:#052e16;--green:#86efac;
+}}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.6;min-height:100vh}
+.wrap{max-width:740px;margin:0 auto;padding:2.5rem 1.25rem 4rem}
+header{margin-bottom:2rem}
+header h1{font-size:26px;font-weight:600;margin-bottom:4px}
+header p{font-size:14px;color:var(--text2)}
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--r-lg);padding:1.25rem 1.5rem;margin-bottom:1rem}
+.card-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:1rem}
+label{font-size:13px;color:var(--text2);display:block;margin-bottom:5px;margin-top:14px}
+label:first-of-type{margin-top:0}
+textarea{width:100%;background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--r-md);padding:9px 12px;font-size:14px;color:var(--text);font-family:inherit;resize:vertical;min-height:68px;line-height:1.5;transition:border-color .15s}
+textarea:focus{outline:none;border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{padding:5px 14px;border:0.5px solid var(--border2);border-radius:20px;font-size:13px;cursor:pointer;color:var(--text2);background:var(--surface2);transition:all .15s;user-select:none}
+.chip:hover{border-color:var(--accent);color:var(--accent-text)}
+.chip.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent-text);font-weight:500}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem}
+@media(max-width:560px){.grid3{grid-template-columns:1fr}}
+.gen-btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--r-md);font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;transition:opacity .15s,transform .1s}
+.gen-btn:hover{opacity:.88}
+.gen-btn:active{transform:scale(.99)}
+#result{margin-top:1.5rem}
+.rbox{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--r-lg);padding:1.5rem}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tag{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;background:var(--accent-bg);color:var(--accent-text);font-weight:500}
+.ptitle{font-size:20px;font-weight:600;margin-bottom:4px}
+.pdesc{font-size:13px;color:var(--text2);line-height:1.6}
+.ptempo{font-size:12px;color:var(--text3);margin-top:4px;font-family:monospace;letter-spacing:.02em}
+.divider{border:none;border-top:0.5px solid var(--border);margin:14px 0}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--r-md);padding:12px 16px}
+.bar-lbl{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.beats-row{display:flex;flex-wrap:wrap;gap:7px;align-items:flex-end}
+.beat{text-align:center;min-width:50px;padding:6px 5px;border-radius:6px;background:var(--surface);border:0.5px solid var(--border)}
+.beat.downbeat{border-color:var(--accent);background:var(--accent-bg)}
+.beat.passing{opacity:.72}
+.sol{font-size:18px;font-weight:600;line-height:1.2;color:var(--text)}
+.beat.downbeat .sol{color:var(--accent-text)}
+.sol.rest-n{color:var(--text3);font-weight:400}
+.rhy{font-size:10px;color:var(--text2);margin-top:2px}
+.bts{font-size:10px;color:var(--text3)}
+.role-dot{width:5px;height:5px;border-radius:50%;margin:3px auto 0;background:transparent}
+.role-dot.tonic{background:var(--accent)}
+.role-dot.color{background:#f59e0b}
+.legend{font-size:12px;color:var(--text3);margin-top:14px;border-top:0.5px solid var(--border);padding-top:10px;line-height:1.9}
+.theory-box{background:var(--green-bg);color:var(--green);border-radius:var(--r-md);padding:10px 14px;font-size:12px;margin-top:12px;line-height:1.7}
+footer{text-align:center;font-size:12px;color:var(--text3);margin-top:2.5rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>&#127925; Music Phrase Generator</h1>
+    <p>Generate solfege-based musical phrases using music theory rules &mdash; no API key needed.</p>
+  </header>
+
+  <div class="card">
+    <div class="card-title">Context &amp; Genre</div>
+    <label for="ctx">Musical context / mood</label>
+    <textarea id="ctx" placeholder="e.g. A peaceful morning walk through a forest, gentle and flowing&hellip;"></textarea>
+    <label>Genre</label>
+    <div class="chips" id="cg-genre">
+      <div class="chip on" data-v="Folk">Folk</div>
+      <div class="chip" data-v="Jazz">Jazz</div>
+      <div class="chip" data-v="Classical">Classical</div>
+      <div class="chip" data-v="Blues">Blues</div>
+      <div class="chip" data-v="Pop">Pop</div>
+      <div class="chip" data-v="Reggae">Reggae</div>
+      <div class="chip" data-v="Latin">Latin</div>
+      <div class="chip" data-v="Polka">Polka</div>
+      <div class="chip" data-v="MiddleEastern">Middle Eastern</div>
+      <div class="chip" data-v="Asian">Asian Modal</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Source Tetrachord</div>
+    <label>4-note foundation pattern</label>
+    <div class="chips" id="cg-tetra">
+      <div class="chip on" data-v="Major">Major</div>
+      <div class="chip" data-v="Ionian">Ionian</div>
+      <div class="chip" data-v="Minor">Minor</div>
+      <div class="chip" data-v="Phrygian">Phrygian</div>
+      <div class="chip" data-v="Lydian">Lydian</div>
+      <div class="chip" data-v="Mixolydian">Mixolydian</div>
+      <div class="chip" data-v="Dorian">Dorian</div>
+      <div class="chip" data-v="Harmonic">Harmonic</div>
+      <div class="chip" data-v="Pentatonic">Pentatonic</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Rhythm &amp; Structure</div>
+    <div class="grid3">
+      <div>
+        <label>Time signature</label>
+        <div class="chips" id="cg-time">
+          <div class="chip on" data-v="4/4">4/4</div>
+          <div class="chip" data-v="3/4">3/4</div>
+          <div class="chip" data-v="5/8">5/8</div>
+          <div class="chip" data-v="6/8">6/8</div>
+          <div class="chip" data-v="7/8">7/8</div>
+        </div>
+      </div>
+      <div>
+        <label>Phrase length</label>
+        <div class="chips" id="cg-len">
+          <div class="chip on" data-v="4">4 bars</div>
+          <div class="chip" data-v="8">8 bars</div>
+        </div>
+      </div>
+      <div>
+        <label>Rhythm style</label>
+        <div class="chips" id="cg-rhy">
+          <div class="chip on" data-v="Simple">Simple</div>
+          <div class="chip" data-v="Mixed">Mixed</div>
+          <div class="chip" data-v="Syncopated">Syncopated</div>
+          <div class="chip" data-v="Flowing">Flowing</div>
+          <div class="chip" data-v="Swing">Swing</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="gen-btn" onclick="generate()">Generate Phrase</button>
+  <div id="result"></div>
+  <footer>Pure JavaScript &mdash; no API, no account, works offline</footer>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+const S = { genre:'Folk', tetra:'Major', time:'4/4', len:'4', rhy:'Simple' };
+['cg-genre','cg-tetra','cg-time','cg-len','cg-rhy'].forEach((id,i) => {
+  const key = ['genre','tetra','time','len','rhy'][i];
+  document.getElementById(id).querySelectorAll('.chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.getElementById(id).querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
+      c.classList.add('on'); S[key] = c.dataset.v;
+    });
+  });
+});
+
+// ── Scale definitions ────────────────────────────────────────────────────────
+// Full octave scales in movable-do solfege. Each syllable maps to a unique pitch class:
+//   Do=1  Ra=♭2  Re=2  Me=♭3  Mi=3  Fa=4  Fi=♯4  Se=♭5  Sol=5
+//   Le=♭6  La=6  Te=♭7  Ti=7  Do'=8
+// roles: T=tonic/stable, S=stepping stone, C=color/tension
+const SCALES = {
+  // Ionian = Major with identical pitches; kept separate as a distinct modal concept
+  Ionian:     { notes:['Do','Re','Mi','Fa', 'Sol','La', 'Ti', "Do'"], roles:['T','S','T','S','T','S','C','T'], label:'Do-Re-Mi-Fa (Ionian)' },
+  Major:      { notes:['Do','Re','Mi','Fa', 'Sol','La', 'Ti', "Do'"], roles:['T','S','T','S','T','S','C','T'], label:'Do-Re-Mi-Fa (Major)' },
+  // Mixolydian: major with flattened 7th (Te instead of Ti)
+  Mixolydian: { notes:['Do','Re','Mi','Fa', 'Sol','La', 'Te', "Do'"], roles:['T','S','T','S','T','S','C','T'], label:'Do-Re-Mi-Fa (Mixolydian)' },
+  Minor:      { notes:['Do','Re','Me','Fa', 'Sol','Le', 'Te', "Do'"], roles:['T','S','S','S','T','C','C','T'], label:'Do-Re-Me-Fa (Natural Minor)' },
+  Phrygian:   { notes:['Do','Ra','Me','Fa', 'Sol','Le', 'Te', "Do'"], roles:['T','C','S','S','T','C','S','T'], label:'Do-Ra-Me-Fa (Phrygian)' },
+  Lydian:     { notes:['Do','Re','Mi','Fi', 'Sol','La', 'Ti', "Do'"], roles:['T','S','T','C','T','S','S','T'], label:'Do-Re-Mi-Fi (Lydian)' },
+  Dorian:     { notes:['Do','Re','Me','Fa', 'Sol','La', 'Te', "Do'"], roles:['T','S','S','S','T','S','C','T'], label:'Do-Re-Me-Fa (Dorian)' },
+  Harmonic:   { notes:['Do','Re','Me','Fa', 'Sol','Le', 'Ti', "Do'"], roles:['T','S','S','S','T','C','C','T'], label:'Do-Re-Me-Fa (Harmonic Minor)' },
+  Pentatonic: { notes:['Do','Re','Mi','Sol','La', "Do'","Re'","Mi'"],  roles:['T','S','T','T','S','T','S','T'], label:'Do-Re-Mi-Sol-La (Pentatonic)' },
+};
+
+// Chromatic approach/color notes per tetrachord.
+// Each entry: { note, resolvesTo: index in scaleNotes that this chromatically approaches }
+const VARIATIONS = {
+  Ionian:     [{ note:'Me', resolvesTo:2 }, { note:'Se', resolvesTo:4 }],
+  Major:      [{ note:'Me', resolvesTo:2 }, { note:'Se', resolvesTo:4 }],
+  // Mixolydian: Ti (raised 7th) approaches Do' (idx 7); Fi approaches Sol (idx 4)
+  Mixolydian: [{ note:'Ti', resolvesTo:7 }, { note:'Fi', resolvesTo:4 }],
+  Minor:      [{ note:'Ti', resolvesTo:7 }, { note:'Fi', resolvesTo:4 }],
+  Phrygian:   [{ note:'Fi', resolvesTo:4 }, { note:'Se', resolvesTo:4 }],
+  Lydian:     [{ note:'Me', resolvesTo:2 }, { note:'Se', resolvesTo:4 }],
+  Dorian:     [{ note:'Ti', resolvesTo:7 }, { note:'Fi', resolvesTo:4 }],
+  Harmonic:   [{ note:'Fi', resolvesTo:4 }, { note:'Ra', resolvesTo:1 }],
+  Pentatonic: [{ note:'Fa', resolvesTo:3 }, { note:'Te', resolvesTo:4 }],
+};
+
+// ── Rhythm patterns ──────────────────────────────────────────────────────────
+// Simple meters (4/4, 3/4): values in quarter-note beats.
+// Compound meters (5/8, 6/8, 7/8): values in eighth-note units.
+// Swing style: uses dotted feel patterns (long-short groupings).
+const PAT = {
+  '4/4': {
+    Folk:         { Simple:[[1,1,2],[1,1,1,1],[2,1,1],[4],[1,2,1],[2,2]], Mixed:[[1,1,0.5,0.5,1],[1,0.5,0.5,1,1],[0.5,0.5,1,1,1],[1.5,0.5,1,1],[1,1,1.5,0.5]], Syncopated:[[0.5,1,0.5,1,1],[1,0.5,1,1,0.5],[0.5,0.5,0.5,1,0.5,1],[1,1.5,0.5,1]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5]], Swing:[[1,1,2],[1.5,0.5,1,1],[1,0.5,0.5,2],[1,1,1.5,0.5]] },
+    Jazz:         { Simple:[[1,1,2],[1.5,0.5,1,1],[1,2,1],[2,1.5,0.5],[1,1,1.5,0.5]], Mixed:[[1,0.5,0.5,1,0.5,0.5],[1.5,0.5,0.5,0.5,1],[0.5,1,0.5,0.5,0.5,1],[1,0.5,1,0.5,1]], Syncopated:[[0.5,1,0.5,1,1],[1,0.5,1,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5],[0.5,1.5,0.5,1,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,1],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[1.5,0.5,1.5,0.5],[1,0.5,0.5,1,0.5,0.5],[1.5,0.5,0.5,0.5,1],[0.5,1,0.5,0.5,0.5,1]] },
+    Classical:    { Simple:[[1,1,1,1],[2,2],[1,1,2],[4],[2,1,1],[1,2,1]], Mixed:[[1,0.5,0.5,1,1],[0.5,0.5,1,1,1],[1.5,0.5,1,1],[1,1,0.5,0.5,1],[0.5,0.5,0.5,0.5,1,1]], Syncopated:[[1,1.5,0.5,1],[0.5,1.5,1,1],[1,0.5,1.5,1],[1.5,0.5,1.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,1]], Swing:[[1,1,2],[1.5,0.5,1,1],[1,0.5,0.5,2],[2,1,1]] },
+    Blues:        { Simple:[[1,1,2],[1.5,0.5,2],[2,1,1],[1,1,1,1],[3,1]], Mixed:[[1,0.5,0.5,1,1],[0.5,0.5,0.5,0.5,1,1],[1,1,0.5,0.5,1],[1.5,0.5,0.5,0.5,1]], Syncopated:[[0.5,1,0.5,1,1],[1,0.5,0.5,0.5,0.5,1],[0.5,0.5,1,1,1],[0.5,1,1,0.5,1]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,1],[0.5,0.5,1,1,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,1,0.5]], Swing:[[1.5,0.5,1.5,0.5],[1,0.5,0.5,1.5,0.5],[0.5,1,0.5,1,0.5,0.5],[1.5,0.5,1,1]] },
+    Pop:          { Simple:[[1,1,1,1],[2,1,1],[1,1,2],[4],[1,2,1]], Mixed:[[1,0.5,0.5,1,1],[1,1,0.5,0.5,1],[0.5,0.5,1,1,1],[1.5,0.5,1,1]], Syncopated:[[0.5,1,0.5,1,1],[1,0.5,1,0.5,1],[0.5,0.5,0.5,0.5,1,1],[1,0.5,0.5,0.5,1,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5]], Swing:[[1,1,2],[1.5,0.5,1,1],[1,0.5,0.5,2],[1,1,1.5,0.5]] },
+    Reggae:       { Simple:[[2,1,1],[1,1,2],[1,2,1],[2,2]], Mixed:[[1,1,0.5,1,0.5],[0.5,1.5,0.5,1.5],[1,0.5,1.5,1],[0.5,0.5,1,1,1]], Syncopated:[[0.5,1.5,0.5,1.5],[1,0.5,0.5,1.5,0.5],[0.5,1,1,0.5,1],[1,0.5,1,0.5,1]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,1,0.5,0.5,0.5,1],[1,0.5,0.5,0.5,0.5,1],[0.5,0.5,1,0.5,0.5,0.5,0.5]], Swing:[[1.5,0.5,1.5,0.5],[0.5,1.5,0.5,1.5],[1,0.5,0.5,1.5,0.5],[1,1,2]] },
+    Latin:        { Simple:[[1,1,1,1],[2,1,1],[1,2,1],[1,1,2]], Mixed:[[1,0.5,0.5,1,1],[1.5,0.5,1,1],[0.5,1,0.5,1,1],[1,1,0.5,1,0.5]], Syncopated:[[0.5,0.5,1,0.5,0.5,1],[1,0.5,1,0.5,1],[0.5,1,0.5,0.5,1,0.5],[1,0.5,0.5,1,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5]], Swing:[[1,0.5,0.5,1,1],[1.5,0.5,1,1],[1,0.5,1,0.5,1],[0.5,1,0.5,1,1]] },
+    Polka:        { Simple:[[1,1,1,1],[2,1,1],[1,1,2],[2,2]], Mixed:[[1,0.5,0.5,1,1],[0.5,0.5,1,1,1],[1,1,0.5,0.5,1],[1.5,0.5,1,1]], Syncopated:[[1,0.5,0.5,1,1],[0.5,1,0.5,1,1],[1,1,0.5,1,0.5],[0.5,0.5,1,1,1]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,1]], Swing:[[1,1,2],[1.5,0.5,1,1],[1,0.5,0.5,2],[2,1,1]] },
+    MiddleEastern:{ Simple:[[2,1,1],[1,2,1],[1,1,2],[4]], Mixed:[[1.5,0.5,1,1],[1,1,1.5,0.5],[2,0.5,0.5,1],[1,0.5,1.5,1]], Syncopated:[[0.5,1.5,1,1],[1,0.5,1.5,1],[1.5,0.5,0.5,0.5,1],[0.5,0.5,0.5,1.5,1]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5]], Swing:[[1.5,0.5,2],[2,1.5,0.5],[1,1,2],[2,2]] },
+    Asian:        { Simple:[[2,2],[4],[1,1,2],[2,1,1],[1,3]], Mixed:[[1.5,0.5,1,1],[1,1,1.5,0.5],[2,0.5,0.5,1],[1,0.5,1.5,1]], Syncopated:[[0.5,1.5,1,1],[1,0.5,1.5,1],[1.5,0.5,0.5,0.5,1],[2,0.5,0.5,1]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5],[1,0.5,0.5,1,0.5,0.5]], Swing:[[2,2],[1,1,2],[2,1,1],[4]] },
+  },
+  '3/4': {
+    Folk:         { Simple:[[1,1,1],[1,2],[2,1],[3]], Mixed:[[1,0.5,0.5,1],[0.5,0.5,1,1],[1.5,0.5,1],[1,1,0.5,0.5]], Syncopated:[[0.5,1,0.5,1],[1,0.5,1,0.5],[0.5,0.5,0.5,0.5,1]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5]], Swing:[[1.5,0.5,1],[1,0.5,0.5,1],[1,1,1],[1,2]] },
+    Jazz:         { Simple:[[1,1,1],[1.5,0.5,1],[1,2],[2,0.5,0.5]], Mixed:[[1,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1],[0.5,1,0.5,0.5,0.5]], Syncopated:[[0.5,1,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5],[1,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1],[1,0.5,0.5,0.5,0.5]], Swing:[[1.5,0.5,1],[1,0.5,0.5,0.5,0.5],[0.5,1,0.5,0.5,0.5],[1,1,1]] },
+    Classical:    { Simple:[[1,1,1],[1,2],[2,1],[3]], Mixed:[[1,0.5,0.5,1],[1.5,0.5,1],[1,1,0.5,0.5],[0.5,0.5,0.5,0.5,1]], Syncopated:[[0.5,1,1,0.5],[1,0.5,0.5,1],[0.5,0.5,1,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5]], Swing:[[1,2],[1.5,0.5,1],[1,1,1],[2,1]] },
+    Blues:        { Simple:[[1,1,1],[1.5,0.5,1],[2,1],[3]], Mixed:[[1,0.5,0.5,1],[0.5,0.5,1,1],[1,1,0.5,0.5]], Syncopated:[[0.5,1,0.5,1],[0.5,0.5,0.5,0.5,1],[1,0.5,1,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5]], Swing:[[1.5,0.5,1],[1,0.5,0.5,1],[0.5,1,0.5,0.5,0.5],[1,1,1]] },
+    Pop:          { Simple:[[1,1,1],[1,2],[2,1]], Mixed:[[1,0.5,0.5,1],[0.5,0.5,1,1],[1.5,0.5,1]], Syncopated:[[0.5,1,0.5,1],[0.5,0.5,0.5,1,0.5],[1,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[1,2],[1.5,0.5,1],[1,1,1],[2,1]] },
+    Reggae:       { Simple:[[1,2],[2,1],[1,1,1],[3]], Mixed:[[0.5,1.5,1],[1,0.5,0.5,1],[0.5,0.5,1,1]], Syncopated:[[0.5,1,0.5,1],[1,0.5,1,0.5],[0.5,0.5,0.5,0.5,1]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5],[1,0.5,0.5,0.5,0.5]], Swing:[[1.5,0.5,1],[0.5,1.5,1],[1,1,1],[1,2]] },
+    Latin:        { Simple:[[1,1,1],[1,2],[2,1],[3]], Mixed:[[1,0.5,0.5,1],[0.5,1,0.5,1],[1.5,0.5,1]], Syncopated:[[0.5,1,0.5,1],[0.5,0.5,1,0.5,0.5],[1,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5],[1,0.5,0.5,0.5,0.5]], Swing:[[1.5,0.5,1],[1,0.5,0.5,1],[1,1,1],[2,1]] },
+    Polka:        { Simple:[[1,1,1],[1,2],[2,1],[3]], Mixed:[[1,0.5,0.5,1],[0.5,0.5,1,1],[1.5,0.5,1]], Syncopated:[[0.5,1,1,0.5],[1,0.5,0.5,1],[0.5,0.5,1,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5]], Swing:[[1,1,1],[1,2],[2,1],[1.5,0.5,1]] },
+    MiddleEastern:{ Simple:[[1,1,1],[2,1],[1,2],[3]], Mixed:[[1.5,0.5,1],[1,0.5,0.5,1],[2,0.5,0.5]], Syncopated:[[0.5,1,1,0.5],[1,0.5,1,0.5],[0.5,0.5,1,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[1.5,0.5,1],[2,1],[1,1,1],[1,2]] },
+    Asian:        { Simple:[[1,1,1],[2,1],[1,2],[3]], Mixed:[[1.5,0.5,1],[1,0.5,0.5,1],[2,0.5,0.5]], Syncopated:[[0.5,1,1,0.5],[1,0.5,1,0.5],[0.5,0.5,1,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[2,1],[1,2],[1,1,1],[3]] },
+  },
+  // 5/8 = 5 eighth-note units per bar. Common groupings: 2+3 or 3+2
+  '5/8': {
+    Folk:         { Simple:[[1,1,1.5],[1.5,1,1],[1,1,1,0.5,0.5],[0.5,0.5,1,1,1]], Mixed:[[0.5,0.5,1,1,1],[1,0.5,0.5,1,1],[1,1,0.5,0.5,1],[0.5,1,0.5,1,1]], Syncopated:[[0.5,1,0.5,0.5,0.5,1,0.5],[0.5,0.5,0.5,1,0.5,0.5,0.5,0.5],[0.5,1,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5]], Swing:[[1.5,1,1],[1,1,1.5],[1,0.5,0.5,1.5],[1.5,0.5,0.5,1]] },
+    Jazz:         { Simple:[[1.5,1,1],[1,1.5,1],[1,1,1.5]], Mixed:[[0.5,1,0.5,1,1],[1,0.5,0.5,1,1],[1,1,0.5,0.5,1]], Syncopated:[[0.5,1,0.5,1,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,1,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5]], Swing:[[1.5,0.5,0.5,1,0.5],[1,0.5,1,0.5,0.5,0.5],[1.5,0.5,1,0.5,0.5]] },
+    Classical:    { Simple:[[1,1,1.5],[1.5,1,1],[1,1,1,0.5,0.5]], Mixed:[[1.5,0.5,1,1],[1,1,1.5],[0.5,0.5,1,1,1]], Syncopated:[[0.5,1,0.5,1,1],[1,0.5,0.5,1,1],[0.5,0.5,0.5,1,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5]], Swing:[[1.5,1,1],[1,1.5,1],[1,1,1.5]] },
+    Blues:        { Simple:[[1.5,1,1],[1,1,1.5],[1,1,1,0.5,0.5]], Mixed:[[1,0.5,0.5,1,1],[1.5,0.5,1,1],[0.5,0.5,0.5,0.5,1,1]], Syncopated:[[0.5,1,0.5,1,1],[0.5,0.5,0.5,0.5,0.5,1,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[1.5,0.5,0.5,1,0.5],[1,0.5,1,0.5,1],[1.5,1,1]] },
+    Pop:          { Simple:[[1,1,1.5],[1.5,1,1],[1,1,1,0.5,0.5]], Mixed:[[1,0.5,0.5,1,1],[1.5,0.5,1,1],[0.5,0.5,1,1,1]], Syncopated:[[0.5,1,0.5,1,1],[1,0.5,0.5,1,1],[0.5,0.5,0.5,1,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5]], Swing:[[1.5,1,1],[1,1,1.5],[1,0.5,0.5,1.5]] },
+    Reggae:       { Simple:[[1.5,1,1],[1,1.5,1],[1,1,1.5]], Mixed:[[0.5,1.5,1,1],[1,0.5,1,1],[0.5,0.5,0.5,0.5,1,1]], Syncopated:[[0.5,1,0.5,1,1],[1,0.5,0.5,1,1],[0.5,0.5,1,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[1.5,1,1],[0.5,1.5,0.5,1],[1,1,1.5]] },
+    Latin:        { Simple:[[1,1,1.5],[1.5,1,1],[1,1,1,0.5,0.5]], Mixed:[[1,0.5,0.5,1,1],[0.5,1,0.5,1,1],[1.5,0.5,1,1]], Syncopated:[[0.5,0.5,1,0.5,1,0.5],[0.5,1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,1,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[1.5,0.5,0.5,1,0.5],[1,0.5,1.5,0.5,0.5],[1.5,1,1]] },
+    Polka:        { Simple:[[1,1,1.5],[1.5,1,1],[1,1,1,0.5,0.5]], Mixed:[[1,0.5,0.5,1,1],[0.5,0.5,1,1,1],[1.5,0.5,1,1]], Syncopated:[[0.5,1,0.5,1,1],[1,0.5,0.5,1,1],[0.5,0.5,0.5,1,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5]], Swing:[[1.5,1,1],[1,1.5,1],[1,1,1.5]] },
+    MiddleEastern:{ Simple:[[1.5,1,1],[2,1.5],[1,1,1.5],[2.5,1]], Mixed:[[1.5,0.5,1,1],[1,1,1.5],[2,0.5,0.5,0.5,0.5]], Syncopated:[[0.5,1.5,0.5,1,0.5],[1,0.5,1.5,0.5,0.5],[0.5,0.5,1.5,1,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[1.5,1,1],[2,1.5],[1.5,0.5,1,0.5,0.5]] },
+    Asian:        { Simple:[[2,1.5],[1.5,2],[1,1,1.5],[2.5,1]], Mixed:[[1.5,1,1],[1,1.5,1],[2,0.5,0.5,0.5,0.5]], Syncopated:[[0.5,1.5,1,1],[1,0.5,1.5,1],[1.5,0.5,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5]], Swing:[[2,1.5],[1.5,2],[2.5,1]] },
+  },
+  // 6/8 = 6 eighth-note units. Groups naturally as 2 dotted-quarters (1.5+1.5)
+  '6/8': {
+    Folk:         { Simple:[[1.5,1.5],[1,0.5,1,0.5],[0.5,0.5,0.5,1.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Mixed:[[1,0.5,1,0.5,0.5,0.5],[0.5,0.5,1,0.5,1,0.5],[1.5,0.5,0.5,1,0.5]], Syncopated:[[0.5,1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,1,0.5,1,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,1]], Swing:[[1.5,1.5],[1,0.5,1,0.5],[1.5,0.5,0.5,0.5,0.5,0.5]] },
+    Jazz:         { Simple:[[1.5,1.5],[1,0.5,1,0.5],[0.5,0.5,0.5,1.5,0.5]], Mixed:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,1,0.5],[0.5,1,0.5,0.5,0.5,0.5,0.5,0.5]], Syncopated:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,1],[0.5,0.5,0.5,0.5,1,0.5,0.5,0.5]], Swing:[[1.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,1.5,0.5,0.5],[1,0.5,0.5,0.5,1,0.5]] },
+    Classical:    { Simple:[[1.5,1.5],[1,0.5,1,0.5],[3]], Mixed:[[1,0.5,1,0.5,0.5,0.5],[1.5,0.5,0.5,1,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,1]], Syncopated:[[0.5,1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,1,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5,0.5]], Swing:[[1.5,1.5],[1,0.5,1,0.5],[1.5,0.5,0.5,1]] },
+    Blues:        { Simple:[[1.5,1.5],[1,0.5,1,0.5],[1.5,0.5,0.5,1]], Mixed:[[1,0.5,0.5,0.5,1,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1.5,0.5,0.5,0.5,0.5,0.5,0.5]], Syncopated:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,1]], Swing:[[1.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,1.5,0.5,0.5],[1,0.5,0.5,0.5,1,0.5]] },
+    Pop:          { Simple:[[1.5,1.5],[1,0.5,1,0.5],[1.5,0.5,0.5,1]], Mixed:[[1,0.5,0.5,0.5,1,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,1],[1.5,0.5,0.5,0.5,0.5,0.5,0.5]], Syncopated:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5,0.5]], Swing:[[1.5,1.5],[1,0.5,1,0.5],[1.5,0.5,1,0.5]] },
+    Reggae:       { Simple:[[1.5,1.5],[1,0.5,1,0.5],[3]], Mixed:[[0.5,1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,1],[1,0.5,0.5,0.5,1,0.5]], Syncopated:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1,0.5,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,1],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[1.5,1.5],[0.5,1,0.5,1,0.5],[1,0.5,0.5,0.5,1]] },
+    Latin:        { Simple:[[1.5,1.5],[1,0.5,1,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,1]], Mixed:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,1]], Syncopated:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,1,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,1],[0.5,0.5,0.5,0.5,1,0.5,0.5,0.5]], Swing:[[1.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5],[1,0.5,0.5,0.5,1,0.5]] },
+    Polka:        { Simple:[[1.5,1.5],[1,0.5,1,0.5],[3]], Mixed:[[1,0.5,1,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,1],[1.5,0.5,0.5,0.5,0.5,0.5,0.5]], Syncopated:[[0.5,1,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,1]], Swing:[[1.5,1.5],[1,0.5,1,0.5],[1.5,0.5,0.5,1]] },
+    MiddleEastern:{ Simple:[[1.5,1.5],[3],[1,0.5,1,0.5],[2,1]], Mixed:[[1.5,0.5,0.5,1],[2,0.5,0.5,0.5,0.5],[1,0.5,1,0.5,0.5,0.5]], Syncopated:[[0.5,1,0.5,0.5,1,0.5],[1.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,1.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,1]], Swing:[[1.5,1.5],[2,1],[1.5,0.5,0.5,0.5,0.5,0.5]] },
+    Asian:        { Simple:[[1.5,1.5],[3],[1,0.5,1,0.5],[2,1]], Mixed:[[1.5,1,0.5],[2,0.5,0.5,0.5,0.5],[1,0.5,1.5,0.5]], Syncopated:[[0.5,1.5,0.5,1,0.5],[1,0.5,0.5,0.5,1,0.5],[1.5,0.5,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,1]], Swing:[[1.5,1.5],[3],[2,1]] },
+  },
+  // 7/8 = 7 eighth-note units. Common groupings: 2+2+3, 3+2+2, 2+3+2
+  '7/8': {
+    Folk:         { Simple:[[2,2,1.5],[1.5,2,2],[2,1.5,2]], Mixed:[[1,0.5,0.5,0.5,0.5,1,1],[1,1,0.5,0.5,1,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,1,1]], Syncopated:[[0.5,0.5,0.5,0.5,1,0.5,0.5,1],[1,0.5,0.5,0.5,0.5,0.5,0.5,1],[0.5,1,0.5,0.5,0.5,1,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[2,2,1.5],[1.5,2,2],[1,0.5,1,0.5,1.5]] },
+    Jazz:         { Simple:[[2,2,1.5],[1.5,2,2],[2,1.5,2]], Mixed:[[1,0.5,1,0.5,0.5,0.5,1],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,1.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Syncopated:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,1,0.5,0.5,0.5,1,0.5,0.5],[0.5,0.5,0.5,0.5,1,0.5,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[2,1.5,1.5],[1.5,1,0.5,1.5],[1,0.5,0.5,0.5,1.5,0.5]] },
+    Classical:    { Simple:[[2,2,1.5],[1.5,2,2],[2,1.5,2]], Mixed:[[1,0.5,0.5,0.5,0.5,1,1],[1,1,0.5,0.5,1,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,1,1]], Syncopated:[[0.5,1.5,1,1.5,0.5],[1,0.5,1.5,0.5,1.5],[1.5,0.5,0.5,0.5,1.5,1]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[2,2,1.5],[1.5,2,2],[2,1.5,2]] },
+    Blues:        { Simple:[[2,2,1.5],[1.5,2,2],[2,1.5,2]], Mixed:[[1,0.5,0.5,0.5,0.5,1,1],[1,1,0.5,0.5,1,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,1,1]], Syncopated:[[0.5,0.5,0.5,0.5,1,0.5,0.5,1],[1,0.5,0.5,0.5,0.5,0.5,0.5,1],[0.5,1,0.5,0.5,0.5,1,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[2,2,1.5],[1.5,2,2],[1.5,0.5,0.5,0.5,1.5,0.5]] },
+    Pop:          { Simple:[[2,2,1.5],[1.5,2,2],[2,1.5,2]], Mixed:[[1,0.5,0.5,0.5,0.5,1,1],[0.5,0.5,0.5,0.5,0.5,0.5,1,1],[1,1,0.5,0.5,1,0.5]], Syncopated:[[0.5,0.5,0.5,0.5,1,0.5,0.5,1],[1,0.5,0.5,0.5,0.5,0.5,0.5,1],[0.5,1,0.5,0.5,0.5,1,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[2,2,1.5],[1.5,2,2],[2,1.5,2]] },
+    Reggae:       { Simple:[[2,2,1.5],[1.5,2,2],[2,1.5,2]], Mixed:[[0.5,1.5,0.5,0.5,1.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,1],[0.5,0.5,1,0.5,0.5,1,0.5]], Syncopated:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,1,0.5,0.5,0.5,1,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[2,2,1.5],[0.5,1.5,0.5,1.5,0.5],[1.5,2,2]] },
+    Latin:        { Simple:[[2,2,1.5],[1.5,2,2],[2,1.5,2]], Mixed:[[1,0.5,0.5,0.5,0.5,1,1],[0.5,0.5,0.5,0.5,0.5,0.5,1,1],[1,1,0.5,0.5,1,0.5]], Syncopated:[[0.5,0.5,0.5,0.5,1,0.5,0.5,1],[0.5,1,0.5,0.5,0.5,1,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[2,1.5,1.5],[1.5,1.5,2],[1,0.5,1,0.5,1.5]] },
+    Polka:        { Simple:[[2,2,1.5],[1.5,2,2],[2,1.5,2]], Mixed:[[1,0.5,0.5,0.5,0.5,1,1],[0.5,0.5,0.5,0.5,0.5,0.5,1,1],[1,1,0.5,0.5,1,0.5]], Syncopated:[[0.5,0.5,0.5,0.5,1,0.5,0.5,1],[1,0.5,0.5,0.5,0.5,0.5,0.5,1],[0.5,1,0.5,0.5,0.5,1,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[2,2,1.5],[1.5,2,2],[2,1.5,2]] },
+    MiddleEastern:{ Simple:[[2,2,1.5],[1.5,2,2],[2,1.5,2],[3.5,2]], Mixed:[[1.5,0.5,1,1.5],[2,0.5,0.5,1.5],[1,0.5,0.5,0.5,1.5,0.5]], Syncopated:[[0.5,1.5,0.5,0.5,1.5,0.5],[1,0.5,0.5,0.5,0.5,1.5],[1.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[2,2,1.5],[3.5,2],[1.5,2,2]] },
+    Asian:        { Simple:[[3.5,2],[2,3.5],[2,2,1.5],[1.5,2,2]], Mixed:[[2,1,0.5,1.5],[1.5,1,0.5,2],[1,1,1.5,0.5,0.5,0.5]], Syncopated:[[0.5,1.5,0.5,1.5,1],[1,0.5,1.5,0.5,1.5],[1.5,0.5,0.5,0.5,1.5,0.5]], Flowing:[[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]], Swing:[[3.5,2],[2,3.5],[2,2,1.5]] },
+  },
+};
+
+// Beat value → display name
+const RNAME = { 4:'whole',3:'dotted-half',2:'half',1.5:'dotted-quarter',1:'quarter',0.5:'eighth',3.5:'dotted-dotted-half',2.5:'dotted-half+' };
+const SYM   = { 'whole':'&#119133;','dotted-half':'&#119134;.','half':'&#119134;','dotted-quarter':'&#9833;.','quarter':'&#9833;','eighth':'&#9834;','dotted-dotted-half':'&#119134;..','dotted-half+':'&#119134;.' };
+
+// ── Genre character ──────────────────────────────────────────────────────────
+const GENRE = {
+  Folk:         { stepBias:0.82, leapSize:[2,3],     restChance:0.04, colorChance:0.06, tempos:['Moderato &#9834;=96','Andante &#9834;=80','Allegretto &#9834;=112','Lively &#9834;=126'] },
+  Jazz:         { stepBias:0.60, leapSize:[2,3,4,5], restChance:0.09, colorChance:0.14, tempos:['Medium Swing &#9834;=120','Slow Swing &#9834;=72','Bop &#9834;=160','Ballad &#9834;=60'] },
+  Classical:    { stepBias:0.80, leapSize:[2,3],     restChance:0.04, colorChance:0.06, tempos:['Andante &#9834;=72','Allegro &#9834;=132','Moderato &#9834;=96','Adagio &#9834;=56'] },
+  Blues:        { stepBias:0.65, leapSize:[2,3],     restChance:0.10, colorChance:0.16, tempos:['Slow Blues &#9834;=60','Shuffle &#9834;=88','Medium &#9834;=100','Fast &#9834;=132'] },
+  Pop:          { stepBias:0.80, leapSize:[2,3],     restChance:0.05, colorChance:0.06, tempos:['Moderato &#9834;=100','Andante &#9834;=80','Upbeat &#9834;=116','Slow &#9834;=70'] },
+  Reggae:       { stepBias:0.78, leapSize:[2,3],     restChance:0.14, colorChance:0.06, tempos:['Roots &#9834;=72','Rocksteady &#9834;=84','Dancehall &#9834;=100','Dub &#9834;=60'] },
+  Latin:        { stepBias:0.72, leapSize:[2,3,4],   restChance:0.07, colorChance:0.10, tempos:['Son &#9834;=116','Bolero &#9834;=72','Mambo &#9834;=176','Bossa &#9834;=132'] },
+  Polka:        { stepBias:0.84, leapSize:[2,3],     restChance:0.04, colorChance:0.04, tempos:['Allegro &#9834;=132','Vivace &#9834;=152','Moderato &#9834;=112','Presto &#9834;=168'] },
+  MiddleEastern:{ stepBias:0.65, leapSize:[2,3],     restChance:0.06, colorChance:0.18, tempos:['Moderate &#9834;=84','Lively &#9834;=120','Slow &#9834;=60','Free &#9834;=72'] },
+  Asian:        { stepBias:0.74, leapSize:[2,3,4],   restChance:0.12, colorChance:0.08, tempos:['Slow &#9834;=54','Moderate &#9834;=80','Lively &#9834;=108','Free &#9834;=72'] },
+};
+
+// ── Mood detection ───────────────────────────────────────────────────────────
+const MOOD_MAP = {
+  calm:['arch'],peaceful:['arch'],gentle:['arch'],lyrical:['arch'],smooth:['arch'],
+  sad:['descent'],dark:['descent'],melancholic:['descent'],somber:['descent'],slow:['descent'],
+  happy:['ascent'],bright:['ascent'],joyful:['arch'],light:['ascent'],
+  energetic:['wave'],fast:['wave'],flowing:['wave'],dramatic:['arch'],
+  intense:['wave'],playful:['wave'],dance:['wave'],mysterious:['descent'],haunting:['descent'],
+};
+
+function detectContour(text) {
+  const t = text.toLowerCase();
+  for (const [word, shapes] of Object.entries(MOOD_MAP)) {
+    if (t.includes(word)) return rnd(shapes);
+  }
+  return rnd(['arch','wave','ascent','descent']);
+}
+
+// ── Utilities ────────────────────────────────────────────────────────────────
+const rnd   = arr => arr[Math.floor(Math.random()*arr.length)];
+const clamp = (v,lo,hi) => Math.max(lo,Math.min(hi,v));
+
+function contourTarget(progress, shape, len) {
+  const hi = len - 1;
+  switch(shape) {
+    case 'arch':    return Math.round(Math.sin(progress*Math.PI)*hi);
+    case 'descent': return Math.round((1-progress)*hi*0.85+hi*0.05);
+    case 'ascent':  return Math.round(progress*hi*0.85);
+    case 'wave':    return Math.round(((Math.sin(progress*Math.PI*2-Math.PI/2)+1)/2)*hi);
+    default:        return Math.round(hi/2);
+  }
+}
+
+// ── Phrase builder ───────────────────────────────────────────────────────────
+function buildPhrase(totalBars, beatsPerBar, scale, genreKey, contourShape, colorNotes) {
+  const { notes: scaleNotes, roles } = scale;
+  const { stepBias, leapSize, restChance, colorChance } = GENRE[genreKey];
+  const timeSig = S.time;
+  const patPool = PAT[timeSig][genreKey][S.rhy];
+
+  let cursor = Math.round(scaleNotes.length * 0.25);
+  let prevWasLeap  = false;
+  let pendingResolve = null; // set to a scaleNotes index when we just placed a color note
+  const bars = [];
+
+  for (let b = 0; b < totalBars; b++) {
+    const progress  = totalBars <= 1 ? 0 : b / (totalBars - 1);
+    const isLastBar = b === totalBars - 1;
+    const durations = [...rnd(patPool)];
+    const target    = contourTarget(progress, contourShape, scaleNotes.length);
+    const notes     = [];
+
+    for (let d = 0; d < durations.length; d++) {
+      const dur      = durations[d];
+      const isFirst  = d === 0;
+      const isLast   = d === durations.length - 1;
+      const isStrong = isFirst;
+
+      // ── Forced resolution after a color note ──────────────────────
+      // A chromatic approach note MUST resolve to its target scale degree next.
+      if (pendingResolve !== null) {
+        cursor = pendingResolve;
+        pendingResolve = null;
+        prevWasLeap = false;
+        const solfege = scaleNotes[cursor];
+        const role = roles[cursor] === 'T' ? 'tonic' : roles[cursor] === 'C' ? 'color' : 'step';
+        notes.push({ solfege, rhythm:RNAME[dur]||String(dur)+'b', beats:dur, role });
+        continue;
+      }
+
+      // ── Rest decision ──────────────────────────────────────────────
+      if (!isFirst && !(isLastBar && isLast) && Math.random() < restChance) {
+        notes.push({ solfege:'R', rhythm:RNAME[dur]||String(dur)+'b', beats:dur, role:'rest' });
+        prevWasLeap = false;
+        continue;
+      }
+
+      // ── Color/approach note ────────────────────────────────────────
+      // Conditions: not beat 1, not last note of bar (needs room to resolve next note),
+      // not last bar, not after a leap, not already resolving.
+      // The next note slot must exist to hold the resolution.
+      const canColor = !isFirst && !isStrong && !isLastBar && !prevWasLeap
+                    && d < durations.length - 1  // must have a next note for resolution
+                    && Math.random() < colorChance
+                    && colorNotes.length > 0;
+
+      if (canColor) {
+        // Pick a color note whose resolvesTo is close to our current cursor
+        // (prefer approach notes that lead naturally from where we are)
+        const candidates = colorNotes.filter(cv =>
+          Math.abs(cv.resolvesTo - cursor) <= 2
+        );
+        const pool = candidates.length ? candidates : colorNotes;
+        const chosen = rnd(pool);
+        notes.push({ solfege:chosen.note, rhythm:RNAME[dur]||String(dur)+'b', beats:dur, role:'color' });
+        pendingResolve = chosen.resolvesTo; // next note must resolve here
+        continue;
+      }
+
+      // ── Pick next scale index ──────────────────────────────────────
+      let nextIdx;
+
+      if (isLastBar && isLast) {
+        nextIdx = 0; // cadence: tonic
+      } else if (isLastBar && d === durations.length - 2) {
+        // penultimate note of phrase: approach tonic by step
+        nextIdx = cursor !== 0 ? (cursor > 0 ? cursor - 1 : 1) : 1;
+      } else if (prevWasLeap) {
+        // Voice leading: resolve leap by step in opposite direction
+        const leapDir = cursor > target ? -1 : 1;
+        nextIdx = clamp(cursor - leapDir, 0, scaleNotes.length - 1);
+        prevWasLeap = false;
+      } else if (isStrong) {
+        // Downbeat: prefer stable tones (tonic=0, dominant=index 4)
+        const stableIdxs = [0, 4].filter(i => i < scaleNotes.length);
+        const nearest = stableIdxs.reduce((best, i) =>
+          Math.abs(i - cursor) < Math.abs(best - cursor) ? i : best, stableIdxs[0]);
+        nextIdx = Math.abs(nearest - cursor) <= 2
+          ? nearest
+          : clamp(cursor + (nearest > cursor ? 1 : -1), 0, scaleNotes.length - 1);
+      } else if (Math.random() < stepBias) {
+        const dist = target - cursor;
+        const dir  = dist > 0 ? 1 : dist < 0 ? -1 : (Math.random() < 0.5 ? 1 : -1);
+        nextIdx = clamp(cursor + dir, 0, scaleNotes.length - 1);
+      } else {
+        const sz  = rnd(leapSize);
+        const dir = (target - cursor) >= 0 ? 1 : -1;
+        nextIdx = clamp(cursor + dir * sz, 0, scaleNotes.length - 1);
+        prevWasLeap = true;
+      }
+
+      cursor = nextIdx;
+      const solfege = scaleNotes[nextIdx];
+      const role    = roles[nextIdx] === 'T' ? 'tonic' : roles[nextIdx] === 'C' ? 'color' : 'step';
+      notes.push({ solfege, rhythm:RNAME[dur]||String(dur)+'b', beats:dur, role });
+    }
+
+    bars.push({ bar: b + 1, notes });
+  }
+
+  return bars;
+}
+
+// ── Main generate ────────────────────────────────────────────────────────────
+function generate() {
+  const ctx        = document.getElementById('ctx').value.trim();
+  const beatsPerBar = { '4/4':4, '3/4':3, '5/8':5, '6/8':6, '7/8':7 }[S.time] || 4;
+  const totalBars  = parseInt(S.len);
+  const scale      = SCALES[S.tetra];
+  const contour    = ctx ? detectContour(ctx) : rnd(['arch','wave','ascent','descent']);
+  const colorNotes = VARIATIONS[S.tetra] || [];
+
+  const bars  = buildPhrase(totalBars, beatsPerBar, scale, S.genre, contour, colorNotes);
+  const tempo = rnd(GENRE[S.genre].tempos);
+
+  const TITLES = {
+    arch:    ['Arch of Light','Rise and Return','Breath and Release','The Long Arc'],
+    ascent:  ['Climbing Line','Upward Reach','The Ascent','Opening Out'],
+    descent: ['Into Stillness','Falling Phrase','The Descent','Downward Path'],
+    wave:    ['Ebb and Flow','The Wave','Undulating','Rolling Line'],
+  };
+  const title = rnd(TITLES[contour] || ['Musical Phrase']);
+  const desc  = `A ${S.genre.toLowerCase()} phrase in ${S.time}, built on the ${scale.label} with a ${contour} melodic contour and ${S.rhy.toLowerCase()} rhythm.`
+    + (ctx ? ` Context: "${ctx.slice(0,60)}${ctx.length>60?'&hellip;"':'"'}` : '');
+
+  render({ title, desc, tempo, bars }, beatsPerBar, scale);
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+function render(p, beats, scale) {
+  const R = document.getElementById('result');
+
+  const barsHtml = p.bars.map(b => {
+    let pos = 0;
+    const notesHtml = b.notes.map(n => {
+      const isRest  = n.solfege === 'R';
+      const isDown  = Math.round(pos*100) === 0;
+      const isPas   = n.role === 'step';
+      pos = Math.round((pos + n.beats)*100)/100;
+      if (pos >= beats) pos = 0;
+      const sym    = SYM[n.rhythm] || '';
+      const dotCls = n.role === 'tonic' ? 'tonic' : n.role === 'color' ? 'color' : '';
+      return `<div class="beat${isDown?' downbeat':''}${isPas?' passing':''}">
+        <div class="sol${isRest?' rest-n':''}">${isRest?'&mdash;':n.solfege}</div>
+        <div class="rhy">${sym} ${n.rhythm||''}</div>
+        <div class="bts">${n.beats}b</div>
+        <div class="role-dot ${dotCls}"></div>
+      </div>`;
+    }).join('');
+    return `<div class="bar"><div class="bar-lbl">Bar ${b.bar}</div><div class="beats-row">${notesHtml}</div></div>`;
+  }).join('');
+
+  R.innerHTML = `<div class="rbox">
+    <div class="tags">
+      <span class="tag">${S.genre}</span>
+      <span class="tag">${S.tetra}</span>
+      <span class="tag">${S.time}</span>
+      <span class="tag">${S.len} bars</span>
+      <span class="tag">${S.rhy}</span>
+    </div>
+    <div class="ptitle">${p.title}</div>
+    <div class="pdesc">${p.desc}</div>
+    <div class="ptempo">${p.tempo}</div>
+    <hr class="divider">
+    <div class="bars">${barsHtml}</div>
+    <div class="legend">
+      &#9834; eighth=0.5 &nbsp;&middot;&nbsp; &#9833; quarter=1 &nbsp;&middot;&nbsp; &#9833;. dotted-quarter=1.5 &nbsp;&middot;&nbsp;
+      &#119134; half=2 &nbsp;&middot;&nbsp; &#119134;. dotted-half=3 &nbsp;&middot;&nbsp; &#119133; whole=4 &nbsp;&middot;&nbsp; &mdash; rest<br>
+      <em>${['5/8','6/8','7/8'].includes(S.time) ? 'Compound meter: values in eighth-note units' : 'Simple meter: values in quarter-note beats'} &nbsp;|&nbsp; Highlighted = downbeat &nbsp;|&nbsp; Faded = passing &nbsp;|&nbsp; &#9679; tonic &nbsp;&#9679; color</em>
+    </div>
+    <div class="theory-box">
+      <strong>Scale pool:</strong> ${scale.notes.join(' &ndash; ')} &nbsp;&nbsp;
+      <strong>Color tones:</strong> ${(VARIATIONS[S.tetra]||[]).map(v=>v.note).join(', ')}
+    </div>
+  </div>`;
+}
+</script>
+</body>
+</html>
